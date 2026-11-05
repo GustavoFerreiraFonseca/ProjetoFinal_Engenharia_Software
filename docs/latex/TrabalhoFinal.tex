@@ -1,0 +1,403 @@
+\documentclass[12pt,a4paper]{article}
+
+% ---------------------------------------------------------------
+% Pacotes
+% ---------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[top=3cm,bottom=2cm,left=3cm,right=2cm]{geometry}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\section*{\refname}}{\subsection*{\refname}}{}{}
+\usepackage{float}
+
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.3em}
+
+\definecolor{caixa}{gray}{0.95}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{\MakeUppercase}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Engenharia de Software -- Trabalho Final}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Caixa para o texto de cada história de usuário
+\newcommand{\historia}[1]{%
+  \par\noindent\colorbox{caixa}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{\itshape #1}}\par\medskip}
+
+% Lista de critérios numerada como 1.1, 1.2, ...
+\newlist{criterios}{enumerate}{1}
+\setlist[criterios]{leftmargin=1.4cm, labelsep=0.4cm, itemsep=0.4em}
+
+\newcommand{\repositorio}{https://github.com/GustavoFerreiraFonseca/ProjetoFinal_Engenharia_Software}
+
+% ---------------------------------------------------------------
+\begin{document}
+
+% ---------------------------------------------------------------
+% Capa
+% ---------------------------------------------------------------
+\begin{titlepage}
+  \centering
+  {\large UNIVERSIDADE TECNOLÓGICA FEDERAL DO PARANÁ\par}
+  \vspace{0.3cm}
+  {\large Engenharia de Software\par}
+
+  \vspace{2.5cm}
+  {\normalsize Gustavo Ferreira da Fonseca\par}
+  {\normalsize Gustavo Henrique Gonçalves\par}
+  {\normalsize João Francisco Barcala Paulo\par}
+
+  \vfill
+  {\LARGE\bfseries Analisador de Desempenho e Rotinas de Treino para Corrida\par}
+  \vspace{0.8cm}
+  {\large Documentação do Trabalho Final\par}
+  \vfill
+
+  {\normalsize 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ---------------------------------------------------------------
+\section{Definição do trio}
+% ---------------------------------------------------------------
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Nome completo} & \textbf{RA} \\
+    \midrule
+    Gustavo Ferreira da Fonseca  & 2669510 \\
+    Gustavo Henrique Gonçalves   & 2669528 \\
+    João Francisco Barcala Paulo & \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent\textbf{Repositório:} \url{\repositorio}
+
+\subsection{Acompanhamento das sprints}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\linewidth}{l c X}
+    \toprule
+    \textbf{Sprint} & \textbf{Review} & \textbf{Entrega} \\
+    \midrule
+    Sprint 1 & 30/10 & Definição do trio, descrição do sistema e pesquisa (Seções 1 a 3) \\
+    Sprint 2 & 06/11 & Histórias de usuário, critérios de aceitação e testes (Seções 4 e 5) \\
+    Sprint 3 & 13/11 & Diagrama da arquitetura e desenvolvimento das histórias (Seção 6) \\
+    Sprint 4 & 27/11 & Refatoração e padrões de projeto (Seção 7) \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------
+\section{Descrição do sistema}
+% ---------------------------------------------------------------
+
+\noindent\textbf{Tema:} Analisador de Desempenho e Rotinas de Treino para Corrida.
+
+Esse será um sistema em que corredores poderão registrar seus treinos, além de
+acompanhar sua evolução ao longo das semanas de uso. Primeiramente, receberemos um
+arquivo CSV com todo o histórico de treino (data, tempo, distância, frequência
+cardíaca). Pegamos esses dados, processaremos para obter pace médio, volume semanal
+acumulado e recordes pessoais. Além disso, iremos realizar análises para verificar se
+não houve um aumento abrupto de volume que pode gerar lesões. Por fim, gerará um
+relatório em txt consolidando sua evolução semanal, destaques de desempenho e alertas
+de risco de lesões.
+
+\begin{table}[H]
+  \centering
+  \caption{Colunas do arquivo CSV de entrada.}
+  \label{tab:csv}
+  \begin{tabularx}{\linewidth}{l X}
+    \toprule
+    \textbf{Coluna} & \textbf{Descrição} \\
+    \midrule
+    \texttt{data}          & Data do treino, no formato DD/MM/AAAA \\
+    \texttt{distancia\_km} & Distância percorrida, em quilômetros \\
+    \texttt{tempo\_min}    & Tempo total do treino, em minutos \\
+    \texttt{fc\_media}     & Frequência cardíaca média do treino, em bpm \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------
+\section{Pesquisa e justificativa}
+% ---------------------------------------------------------------
+
+\noindent\textbf{Fontes de referência:}
+
+\begin{itemize}[leftmargin=0.6cm, itemsep=0.5em]
+  \item[] CAI, Jie; LI, Gang. Exercise or lie down? The impact of fitness app use on
+        users' wellbeing. Frontiers in Public Health, v. 11, p. 1281323, 2024. DOI:
+        10.3389/fpubh.2023.1281323.
+  \item[] VARELLA, Drauzio. Correr: O exercício, a cidade e a busca da superação. 1. ed.
+        São Paulo: Companhia das Letras, 2015.
+  \item[] LABORO. Os benefícios da prática de atividade física orientada via aplicativo.
+        Blog Grupo Laboro, 2021. Disponível em:
+        \url{https://laboro.edu.br/blog/os-beneficios-da-pratica-de-atividade-fisica-orientada-via-aplicativo/}.
+        Acesso em: 30 out. 2026.
+  \item[] VARELLA, Drauzio. Atividade física e metabolismo. Portal Drauzio Varella, UOL.
+        Disponível em:
+        \url{https://drauziovarella.uol.com.br/drauzio/atividade-fisica-e-metabolismo-artigo/}.
+        Acesso em: 30 out. 2026.
+\end{itemize}
+
+As referências acima sustentam a importância da atividade física e, mais
+especificamente, os artigos ``Exercise or lie down? The impact of fitness app use on
+users' wellbeing. Frontiers in Public Health'' e ``Os benefícios da prática de
+atividade física orientada via aplicativo. Blog Grupo Laboro, 2021'' sustentam que o
+monitoramento da evolução por meio de aplicativos podem auxiliar os praticantes a
+começarem e a manterem a disciplina nos exercícios físicos.
+
+% ---------------------------------------------------------------
+\section{Histórias de usuário e critérios de aceitação}
+% ---------------------------------------------------------------
+
+\subsection{História de usuário 1}
+
+\historia{1 - Como usuário eu quero carregar um arquivo csv com meu histórico de
+corrida e obter o cálculo do meu pace médio por treino para acompanhar minha
+evolução nos meus treinos.}
+
+\noindent\textbf{Critérios de aceitação:}
+\begin{criterios}[label=\textbf{1.\arabic*:}]
+  \item O sistema deve ler o arquivo csv e ler a distância e o tempo total de cada
+        corrida. Em quilômetros e minutos respectivamente.
+  \item Para cada corrida registrada, o sistema deve calcular corretamente o pace em
+        minutos por quilômetro, dividindo o tempo decorrido pela distância, se
+        atentando a conversão da parte decimal para segundos.
+  \item Se o arquivo csv contiver distância igual ou inferior a 0 ou tempo igual ou
+        inferior a 0, o sistema deve ignorar essa linha.
+  \item O pace resultante deve ser formatado seguindo o seguinte exemplo: 5:30 min/km.
+\end{criterios}
+
+\subsection{História de usuário 2}
+
+\historia{2 - Como usuário eu quero agrupar os meus treinos semanalmente, e a partir
+disso calcular o volume de treino e meus recordes.}
+
+\noindent\textbf{Critérios de aceitação:}
+\begin{criterios}[label=\textbf{2.\arabic*:}]
+  \item O sistema, ao receber os dados dos treinos, deve organizá-los por semana e
+        ordená-los por data caso não esteja ordenado.
+  \item Ao analisar os treinos, o sistema irá calcular a somatória das distâncias
+        percorridas na semana para determinar o volume semanal.
+  \item O sistema deverá identificar e atualizar os recordes pessoais do usuário, que
+        possui 4 campos de recorde pessoal:
+        \begin{itemize}[itemsep=0pt]
+          \item Maior distância (km).
+          \item Maior volume semanal acumulado (km).
+          \item Maior número de treinos realizados em uma semana.
+          \item Menor pace médio registrado em um treino (min/km).
+        \end{itemize}
+  \item Cada agrupamento semanal deve ser identificado pelo primeiro dia da semana
+        (Domingo), seguindo com o padrão DD/MM/AAAA. Como exemplo: ``semana
+        01/11/2026:''.
+\end{criterios}
+
+\subsection{História de usuário 3 -- Comparativo semanal e disparo de alertas de lesão}
+
+\historia{3 - Como corredor, eu quero receber alertas quando meu volume semanal, meu
+ritmo ou a sequência dos meus treinos mudarem de forma brusca, para reduzir o risco de
+ter uma lesão.}
+
+A história usa três alertas. O alerta de volume usa o ACWR (\textit{Acute:Chronic
+Workload Ratio}) de Gabbett \cite{gabbett2016}, que compara o volume recente do corredor
+(agudo, a semana atual) com o volume com que ele já está acostumado (crônico, a média
+das últimas 4 semanas):
+\[
+  \text{ACWR} = \frac{\text{volume agudo}}{\text{volume crônico}}
+\]
+
+Por exemplo, um corredor que fez 10, 10 e 10 km nas três semanas anteriores e 16 km na
+semana atual tem volume crônico de $(10 + 10 + 10 + 16) / 4 = 11{,}5$ km e ACWR de
+$16 / 11{,}5 = 1{,}39$, o que gera um alerta de atenção (Tabela~\ref{tab:acwr}).
+
+O alerta de ritmo vem de Nielsen \textit{et al.} \cite{nielsen2013}, que ligam mudanças
+bruscas de pace a lesões no tendão de Aquiles, na panturrilha e na fáscia plantar. O
+alerta de recuperação avisa quando o corredor treina vários dias seguidos sem descanso.
+
+\noindent\textbf{Critérios de aceitação:}
+\begin{criterios}[label=\textbf{3.\arabic*:}]
+  \item Para cada semana (agrupamento da história 2), o sistema deve calcular o volume
+        agudo (soma das distâncias da semana), o volume crônico (média do volume das
+        últimas 4 semanas, incluindo a atual; semanas sem treino contam como 0 km) e o
+        ACWR, arredondado para 2 casas decimais.
+  \item O sistema deve classificar o ACWR seguindo as faixas da
+        Tabela~\ref{tab:acwr}. As mensagens de alerta devem seguir os exemplos:
+        \begin{itemize}[itemsep=2pt, before=\raggedright\small]
+          \item \texttt{ATENÇÃO (volume): 16.0 km nesta semana contra média de 11.5 km nas últimas 4 semanas (ACWR 1.39).}
+          \item \texttt{ALERTA (volume): 30.0 km nesta semana contra média de 15.0 km nas últimas 4 semanas (ACWR 2.00). Zona de perigo para lesões.}
+        \end{itemize}
+  \item O sistema deve calcular o pace de cada treino (tempo / distância), o pace médio
+        da semana (média dos paces dos treinos da semana) e o pace crônico (média dos
+        paces dos treinos das últimas 4 semanas, incluindo a atual). Se o pace da
+        semana for 15\% ou mais rápido que o crônico, pela fórmula
+        \[
+          \text{diferença} = \frac{\text{pace crônico} - \text{pace da semana}}
+                                  {\text{pace crônico}} \times 100
+        \]
+        arredondada para 1 casa decimal, o sistema deve gerar o alerta:
+        \begin{itemize}[itemsep=2pt, before=\raggedright\small]
+          \item \texttt{ALERTA (ritmo): pace médio da semana de 4:48 min/km, 15.8\% mais rápido que a média das últimas 4 semanas (5:42 min/km).}
+        \end{itemize}
+  \item Para cada sequência de 3 ou mais dias seguidos com treino, o sistema deve gerar
+        um único alerta de recuperação com o primeiro e o último dia da sequência. Dois
+        treinos no mesmo dia contam como um dia só.
+        \begin{itemize}[itemsep=2pt, before=\raggedright\small]
+          \item \texttt{ALERTA (recuperação): treinos em 3 dias seguidos, de 02/11/2026 a 04/11/2026. Agende um dia de descanso.}
+        \end{itemize}
+  \item Se a semana não tiver 4 semanas de histórico (contando a partir da primeira
+        semana com treino), o sistema não calcula o ACWR nem a diferença de pace,
+        classifica a semana como ``Sem base de comparação'' e não gera alertas de volume
+        nem de ritmo.
+\end{criterios}
+
+\begin{table}[H]
+  \centering
+  \caption{Faixas de classificação do ACWR (critério 3.2), com base em
+           Gabbett \cite{gabbett2016}.}
+  \label{tab:acwr}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{ACWR} & \textbf{Classificação} & \textbf{Alerta} \\
+    \midrule
+    Abaixo de 0,8              & Abaixo da zona segura   & Não \\
+    De 0,8 a 1,3               & Zona segura             & Não \\
+    Acima de 1,3 até 1,5       & Atenção                 & Sim \\
+    Acima de 1,5               & Zona de perigo          & Sim \\
+    Sem 4 semanas de histórico & Sem base de comparação  & Não \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---------------------------------------------------------------
+\section{Relação entre testes e critérios de aceitação}
+% ---------------------------------------------------------------
+
+Os testes automatizados estão na pasta \texttt{testes/}, com um arquivo para cada
+história de usuário, e usam o módulo \texttt{unittest} do Python. O nome de cada teste
+começa pelo número do critério que ele verifica. Para rodar todos os testes a partir da
+raiz do repositório:
+
+\begin{verbatim}
+python -m unittest discover -s testes -v
+\end{verbatim}
+
+\begin{table}[H]
+  \centering
+  \caption{Relação entre os testes automatizados e os critérios de aceitação.}
+  \label{tab:testes}
+  \small
+  \begin{tabularx}{\linewidth}{l >{\ttfamily}X c}
+    \toprule
+    \textbf{Arquivo} & \textbf{\normalfont Teste} & \textbf{Critério(s)} \\
+    \midrule
+    \texttt{testes\_historia1.py} & test\_1\_1\_leitura\_dados\_validos             & 1.1 \\
+                                  & test\_1\_2\_e\_1\_4\_calculo\_e\_formatacao\_pace   & 1.2 e 1.4 \\
+                                  & test\_1\_3\_ignorar\_linhas\_invalidas          & 1.3 \\
+    \midrule
+    \texttt{testes\_historia2.py} & test\_2\_1\_e\_2\_4\_agrupamento\_e\_identificacao & 2.1 e 2.4 \\
+                                  & test\_2\_2\_calculo\_volumeSemanal              & 2.2 \\
+                                  & test\_2\_3\_recordePessoal                      & 2.3 \\
+    \midrule
+    \texttt{testes\_historia3.py} & test\_3\_1\_volume\_semanal\_e\_acwr             & 3.1 \\
+                                  & test\_3\_2\_classificacao\_e\_alertas\_de\_volume                & 3.2 \\
+                                  & test\_3\_3\_mudanca\_brusca\_de\_pace                & 3.3 \\
+                                  & test\_3\_4\_dias\_seguidos\_sem\_descanso     & 3.4 \\
+                                  & test\_3\_5\_semanas\_sem\_historico\_suficiente               & 3.5 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------
+\section{Arquitetura do sistema}
+% ---------------------------------------------------------------
+
+\textit{Seção a ser desenvolvida na Sprint 3: diagrama da arquitetura, com os
+componentes, suas responsabilidades e a comunicação entre eles.}
+
+% ---------------------------------------------------------------
+\section{Padrões de projeto}
+% ---------------------------------------------------------------
+
+\textit{Seção a ser desenvolvida na Sprint 4: padrões de projeto aplicados, com a
+justificativa de cada um e um diagrama por padrão com as classes e módulos reais do
+código.}
+
+% ---------------------------------------------------------------
+% Referências (Sprint 1 e história de usuário 3)
+% ---------------------------------------------------------------
+\newpage
+\section*{Referências}
+\addcontentsline{toc}{section}{Referências}
+
+\renewcommand{\refname}{Pesquisa (Sprint 1)}
+\begin{thebibliography}{9}
+
+\bibitem{cai2024}
+CAI, Jie; LI, Gang. Exercise or lie down? The impact of fitness app use on users'
+wellbeing. \textbf{Frontiers in Public Health}, v. 11, p. 1281323, 2024.
+DOI: 10.3389/fpubh.2023.1281323.
+
+\bibitem{varella2015}
+VARELLA, Drauzio. \textbf{Correr}: o exercício, a cidade e a busca da superação.
+1. ed. São Paulo: Companhia das Letras, 2015.
+
+\bibitem{laboro2021}
+LABORO. Os benefícios da prática de atividade física orientada via aplicativo.
+\textbf{Blog Grupo Laboro}, 2021. Disponível em:
+\url{https://laboro.edu.br/blog/os-beneficios-da-pratica-de-atividade-fisica-orientada-via-aplicativo/}.
+Acesso em: 30 out. 2026.
+
+\bibitem{varella_metabolismo}
+VARELLA, Drauzio. Atividade física e metabolismo. \textbf{Portal Drauzio Varella},
+UOL. Disponível em:
+\url{https://drauziovarella.uol.com.br/drauzio/atividade-fisica-e-metabolismo-artigo/}.
+Acesso em: 30 out. 2026.
+
+\end{thebibliography}
+
+\renewcommand{\refname}{História de usuário 3}
+\begin{thebibliography}{9}
+\setcounter{enumiv}{4}
+
+\bibitem{gabbett2016}
+GABBETT, Tim J. The training-injury prevention paradox: should athletes be training
+smarter and harder? \textbf{British Journal of Sports Medicine}, v. 50, n. 5,
+p. 273-280, 2016. DOI: 10.1136/bjsports-2015-095788.
+
+\bibitem{nielsen2013}
+NIELSEN, Rasmus O. \textit{et al.} Classifying running-related injuries based upon
+etiology, with emphasis on volume and pace. \textbf{International Journal of Sports
+Physical Therapy}, v. 8, n. 2, p. 172-179, 2013.
+
+\end{thebibliography}
+
+\end{document}
