@@ -79,7 +79,8 @@ As referências acima sustentam a importância da atividade física e, mais espe
 
 **História 1**
 
-- **1.1:** O sistema deve ler o arquivo csv e ler a distância e o tempo total de cada corrida. Em quilômetros e minutos respectivamente.
+- **1.1:** O sistema deve ler o arquivo csv e ler a data do treino, a distância, o tempo total de cada corrida e a frequência cardíaca. Sendo a distância em Km, o tempo em minutos e a frequência cardíaca em bpm.
+           A data deve ser formatada da seguinte forma: DD/MM/AAAA.
 - **1.2:** Para cada corrida registrada, o sistema deve calcular corretamente o pace em minutos por quilômetro, dividindo o tempo decorrido pela distância, se atentando a conversão da parte decimal para segundos.
 - **1.3:** Se o arquivo csv contiver distância igual ou inferior a 0 ou tempo igual ou inferior a 0, o sistema deve ignorar essa linha.
 - **1.4:** O pace resultante deve ser formatado seguindo o seguinte exemplo: 5:30 min/km.
