@@ -51,9 +51,7 @@ Depois copiar o `TrabalhoFinal.pdf` gerado para a pasta `docs/`.
 **Trio:**
 - Gustavo Ferreira da Fonseca, RA: 2669510
 - Gustavo Henrique Gonçalves, RA: 2669528
-- João Francisco Barcala Paulo, RA:
-
-Em busca do terceiro.
+- João Francisco Barcala Paulo, RA: 
 
 **Tema:** Analisador de Desempenho e Rotinas de Treino para Corrida. Esse será um sistema em que corredores poderão registrar seus treinos, além de acompanhar sua evolução ao longo das semanas de uso. Primeiramente, receberemos um arquivo CSV com todo o histórico de treino (data, tempo, distância, frequência cardíaca). Pegamos esses dados, processaremos para obter pace médio, volume semanal acumulado e recordes pessoais. Além disso, iremos realizar análises para verificar se não houve um aumento abrupto de volume que pode gerar lesões. Por fim, gerará um relatório em txt consolidando sua evolução semanal, destaques de desempenho e alertas de risco de lesões.
 
