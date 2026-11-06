@@ -26,6 +26,8 @@ Todos os testes de uma vez (a partir da raiz do repositório):
 python -m unittest discover -s testes -v
 ```
 
+Os testes da história 3 importam o script `src/historia3.py`, que será criado na Sprint 3. Até lá eles falham, como previsto para a Sprint 2 (os testes servem como especificação).
+
 Os testes de uma história só:
 
 ```
