@@ -48,10 +48,12 @@ class ProcessadorArquivoTreino(ABC):
                 treinos_validos.append(registro)
                 
         return treinos_validos
-
+    
+    @abstractmethod
     def ler_linhas(self, caminho_arquivo):
         pass
-
+        
+    @abstractmethod
     def extrair_e_validar(self, linha):
         pass
 
