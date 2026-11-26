@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from abc import ABC, abstractmethod
 
-
 def processar_linha_csv(linha_texto):
     partes = linha_texto.split(',')
     if len(partes) < 4:
@@ -16,7 +15,6 @@ def processar_linha_csv(linha_texto):
         return data, distancia, tempo, freq_cardiaca
     except ValueError:
         return None
-
 
 def calcular_pace_formatado(distancia_km, tempo_minutos):
     if distancia_km <= 0 or tempo_minutos <= 0:
@@ -34,7 +32,6 @@ def calcular_pace_formatado(distancia_km, tempo_minutos):
         segundos = 0
 
     return f"{minutos}:{segundos:02d} min/km"
-
 
 # ----------Template Method-----------
 # Define o esqueleto do algoritmo de importação e validação de treinos,
@@ -72,7 +69,6 @@ class ProcessadorArquivoTreino(ABC):
             "pace": pace
         }
 
-
 class ProcessadorCSV(ProcessadorArquivoTreino):
     def ler_linhas(self, caminho_arquivo):
         with open(caminho_arquivo, "r", encoding="utf-8-sig") as arquivo:
@@ -89,7 +85,6 @@ class ProcessadorCSV(ProcessadorArquivoTreino):
             return dados
         except ValueError:
             return None
-
 
 # =- padrão de projeto escolhido : Strategy -=
 # =- Motivo : Otimização da estratégia de comparação no sistema de recordes Pessoais
