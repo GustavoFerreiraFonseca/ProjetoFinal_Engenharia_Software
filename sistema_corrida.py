@@ -106,18 +106,15 @@ class EstrategiaRecorde(ABC):
     def deve_atualizar(self, novo_recorde, atual_recorde):
         pass
 
-
 # estratégia de maior recorde -> define como verdadeiro se o novo valor for maior que o atual 
 class MaiorRecorde(EstrategiaRecorde):
     def deve_atualizar(self, novo_recorde, atual_recorde):
         return novo_recorde > atual_recorde or atual_recorde == 0
 
-
 # estratégia de menor recorde -> define como verdadeiro se o novo valor for menor que o atual 
 class MenorRecorde(EstrategiaRecorde):
     def deve_atualizar(self, novo_recorde, atual_recorde):
         return novo_recorde < atual_recorde or atual_recorde == 0
-
 
 # =- classe de Recorde Pessoal -=
 
@@ -171,20 +168,17 @@ class RecordPessoal:
         if self.__estrategiaMenor.deve_atualizar(menorPaceMedio, self.__menorPaceMedio):
             self.__menorPaceMedio = menorPaceMedio
 
-
 # =- Funções para calculo de volume semanal e organização semanal -=
 
 def calcular_volume_semanal(distancias):
     volume_semanal = sum(distancias)
     return f"{volume_semanal:.2f} km"
 
-
 def ordenarSemana(treinos):
     return sorted(
         treinos,
         key=lambda x: datetime.strptime(x["data"], "%d/%m/%Y")
     )
-
 
 def indentificarDomingo(data):
     dia = datetime.strptime(data, "%d/%m/%Y")
@@ -193,7 +187,6 @@ def indentificarDomingo(data):
     domingo = dia - timedelta(days=dias_para_domingo)
 
     return domingo
-
 
 def agruparSemana(treinos):
     treinos_ordenados = ordenarSemana(treinos)
@@ -211,7 +204,6 @@ def agruparSemana(treinos):
 
     return list(semanas.values())
 
-
 def identificarSemana(treinos):
     agrupamentos = agruparSemana(treinos)
 
@@ -225,7 +217,6 @@ def identificarSemana(treinos):
         semanas[chave_semana] = grupo
 
     return semanas
-
 
 # =- padrão de projeto escolhido : Observer -=
 # =- Motivo : desacoplar o cálculo dos alertas da forma como eles são exibidos
@@ -246,12 +237,10 @@ class ObservadorAlerta(ABC):
     def atualizar(self, semana, mensagem):
         pass
 
-
 # Observador que imprime o alerta no terminal
 class AlertaTerminal(ObservadorAlerta):
     def atualizar(self, semana, mensagem):
         print(mensagem)
-
 
 # Observador que guarda os alertas para o relatório e para os testes
 class ColetorAlertas(ObservadorAlerta):
@@ -263,7 +252,6 @@ class ColetorAlertas(ObservadorAlerta):
 
     def mensagens(self):
         return [alerta["mensagem"] for alerta in self.alertas]
-
 
 # =- classe de análise de risco de lesões (sujeito do Observer) -=
 
@@ -411,7 +399,6 @@ class AnalisadorLesoes:
                 alertas.setdefault(semana, []).append(f"ALERTA (recuperação): treinos em {dias} dias seguidos, de {inicio.strftime('%d/%m/%Y')} a {fim.strftime('%d/%m/%Y')}. Agende um dia de descanso.")
         return alertas
 
-
 def gerar_relatorio(caminho_csv, caminho_saida="relatorio_final.txt"):
     treinos = ProcessadorCSV().processar(caminho_csv)
     if not treinos:
@@ -472,7 +459,6 @@ def gerar_relatorio(caminho_csv, caminho_saida="relatorio_final.txt"):
         arquivo_saida.write(relatorio_texto + "\n")
 
     return relatorio_texto
-
 
 if __name__ == "__main__":
     import sys
