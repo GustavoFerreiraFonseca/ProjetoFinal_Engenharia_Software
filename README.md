@@ -6,14 +6,28 @@ Repositório Público destinado para o projeto final da disciplina de engenharia
 ```
 ProjetoFinal_Engenharia_Software/
 ├── README.md
+├── src/
+│   ├── historia1.py               # leitura do CSV e cálculo do pace (HU 1)
+│   ├── historia2.py               # semanas, volume semanal e recordes com Strategy (HU 2)
+│   ├── historia3.py               # alertas de lesão, versão da Sprint 3 em funções (HU 3)
+│   └── analisador_lesoes.py       # alertas de lesão refatorados na classe AnalisadorLesoes com Observer (HU 3)
 ├── testes/
-│   ├── testes_historia1.py    # testes da história de usuário 1
-│   ├── testes_historia2.py    # testes da história de usuário 2
-│   └── testes_historia3.py    # testes da história de usuário 3
+│   ├── testes_historia1.py        # testes da história de usuário 1
+│   ├── testes_historia2.py        # testes da história de usuário 2
+│   ├── testes_historia3.py        # testes da história de usuário 3 (versão da Sprint 3)
+│   └── testes_analisador_lesoes.py # testes da história de usuário 3 (versão refatorada)
+├── backup/
+│   └── historia2.py               # versão da HU 2 antes da refatoração
 └── docs/
-    ├── TrabalhoFinal.pdf      # documentação do trabalho (gerada a partir do LaTeX)
+    ├── TrabalhoFinal.pdf          # documentação do trabalho (gerada a partir do LaTeX)
+    ├── Diagramas/
+    │   ├── DiagramaArquiteturaDeSoftware.pdf    # arquitetura do sistema
+    │   ├── Fluxograma_Eng_Software.drawio       # fluxograma da aplicação (CSV único) + .png
+    │   ├── diagramaUMLPP1.png                   # padrão Template Method (HU 1)
+    │   ├── Diagrama_UML_HU2.png                 # padrão Strategy (HU 2)
+    │   └── Diagrama_UML_HU3.drawio              # padrão Observer (HU 3) + .png
     ├── latex/
-    │   └── TrabalhoFinal.tex  # fonte do documento
+    │   └── TrabalhoFinal.tex      # fonte do documento
     └── enunciado/
         └── Enunciado_Trabalho_Final_ES_26-2.pdf
 ```
@@ -26,27 +40,13 @@ Todos os testes de uma vez (a partir da raiz do repositório):
 python -m unittest discover -s testes -v
 ```
 
-Os testes da história 3 importam o script `src/historia3.py`, que será criado na Sprint 3. Até lá eles falham, como previsto para a Sprint 2 (os testes servem como especificação).
+A história 3 tem duas versões, cada uma com o seu arquivo de testes: `testes_historia3.py` testa as funções da Sprint 3 (`src/historia3.py`) e `testes_analisador_lesoes.py` testa a classe refatorada da Sprint 4 (`src/analisador_lesoes.py`).
 
-Os testes de uma história só:
-
-```
-cd testes
-python testes_historia1.py
-```
-
-### Como gerar o PDF da documentação
-
-Dentro de `docs/latex/`, rodar duas vezes (a segunda é para o sumário):
+Os testes de uma história só (a partir da raiz do repositório):
 
 ```
-pdflatex TrabalhoFinal.tex
-pdflatex TrabalhoFinal.tex
+python -m unittest testes.testes_historia1 -v
 ```
-
-Depois copiar o `TrabalhoFinal.pdf` gerado para a pasta `docs/`.
-
----
 
 ## Sprint 1
 
@@ -104,7 +104,7 @@ As referências acima sustentam a importância da atividade física e, mais espe
 - **3.2:** O sistema deve classificar o ACWR seguindo as faixas de Gabbett (2016): abaixo de 0,8 é “Abaixo da zona segura” e de 0,8 a 1,3 é “Zona segura” (nenhuma das duas gera alerta); acima de 1,3 até 1,5 é “Atenção”; acima de 1,5 é “Zona de perigo”. As mensagens devem seguir os exemplos:
   - “ATENÇÃO (volume): 16.0 km nesta semana contra média de 11.5 km nas últimas 4 semanas (ACWR 1.39).”
   - “ALERTA (volume): 30.0 km nesta semana contra média de 15.0 km nas últimas 4 semanas (ACWR 2.00). Zona de perigo para lesões.”
-- **3.3:** O sistema deve calcular o pace de cada treino (tempo / distância), o pace médio da semana (média dos paces dos treinos da semana) e o pace crônico (média dos paces dos treinos das últimas 4 semanas, incluindo a atual). Se o pace da semana for 15% ou mais rápido que o crônico, pela fórmula ((pace crônico − pace da semana) / pace crônico) × 100 arredondada para 1 casa decimal, o sistema deve gerar o alerta, pois mudanças bruscas de ritmo estão ligadas a lesões no tendão de Aquiles, na panturrilha e na fáscia plantar (Nielsen et al., 2013). Exemplo:
+- **3.3:** O sistema deve calcular o pace de cada treino (tempo / distância), o pace médio da semana (média dos paces dos treinos da semana) e o pace crônico (média dos paces dos treinos das últimas 4 semanas, incluindo a atual). Semana sem treino não tem pace médio e não gera alerta de ritmo. Se o pace da semana for 15% ou mais rápido que o crônico, pela fórmula ((pace crônico − pace da semana) / pace crônico) × 100 arredondada para 1 casa decimal, o sistema deve gerar o alerta, pois mudanças bruscas de ritmo estão ligadas a lesões no tendão de Aquiles, na panturrilha e na fáscia plantar (Nielsen et al., 2013). Exemplo:
   - “ALERTA (ritmo): pace médio da semana de 4:48 min/km, 15.8% mais rápido que a média das últimas 4 semanas (5:42 min/km).”
 - **3.4:** Para cada sequência de 3 ou mais dias seguidos com treino, o sistema deve gerar um único alerta de recuperação com o primeiro e o último dia da sequência. Dois treinos no mesmo dia contam como um dia só. Exemplo:
   - “ALERTA (recuperação): treinos em 3 dias seguidos, de 02/11/2026 a 04/11/2026. Agende um dia de descanso.”
@@ -115,16 +115,65 @@ As referências acima sustentam a importância da atividade física e, mais espe
 | Arquivo                         | Teste                                        | Critério(s) |
 |---------------------------------|----------------------------------------------|-------------|
 | `testes/testes_historia1.py`    | `test_1_1_leitura_dados_validos`             | 1.1         |
-| `testes/testes_historia1.py`    | `test_1_2_e_1_4_calculo_e_formatacao_pace`   | 1.2 e 1.4   |
+| `testes/testes_historia1.py`    | `test_1_2_calculo_pace`                      | 1.2         |
 | `testes/testes_historia1.py`    | `test_1_3_ignorar_linhas_invalidas`          | 1.3         |
-| `testes/testes_historia2.py`    | `test_2_1_e_2_4_agrupamento_e_identificacao` | 2.1 e 2.4   |
+| `testes/testes_historia1.py`    | `test_1_4_formatacao_pace`                   | 1.4         |
+| `testes/testes_historia2.py`    | `test_2_1_agrupamento_semanal`               | 2.1         |
 | `testes/testes_historia2.py`    | `test_2_2_calculo_volumeSemanal`             | 2.2         |
 | `testes/testes_historia2.py`    | `test_2_3_recordePessoal`                    | 2.3         |
+| `testes/testes_historia2.py`    | `test_2_4_identificacao_agrupamentos_semanais` | 2.4       |
 | `testes/testes_historia3.py`    | `test_3_1_volume_semanal_e_acwr`             | 3.1         |
 | `testes/testes_historia3.py`    | `test_3_2_classificacao_e_alertas_de_volume` | 3.2         |
 | `testes/testes_historia3.py`    | `test_3_3_mudanca_brusca_de_pace`            | 3.3         |
 | `testes/testes_historia3.py`    | `test_3_4_dias_seguidos_sem_descanso`        | 3.4         |
 | `testes/testes_historia3.py`    | `test_3_5_semanas_sem_historico_suficiente`  | 3.5         |
+| `testes/testes_analisador_lesoes.py` | `test_3_1_volume_semanal_e_acwr`        | 3.1         |
+| `testes/testes_analisador_lesoes.py` | `test_3_2_classificacao_e_alertas_de_volume` | 3.2    |
+| `testes/testes_analisador_lesoes.py` | `test_3_3_mudanca_brusca_de_pace`       | 3.3         |
+| `testes/testes_analisador_lesoes.py` | `test_3_4_dias_seguidos_sem_descanso`   | 3.4         |
+| `testes/testes_analisador_lesoes.py` | `test_3_5_semanas_sem_historico_suficiente` | 3.5     |
+
+---
+
+## Sprint 3
+
+- Diagrama da arquitetura: `docs/Diagramas/DiagramaArquiteturaDeSoftware.pdf`.
+- Diagrama de fluxo da HU 3 (versão treino por treino), substituído na Sprint 4 pelo fluxograma da aplicação.
+- Desenvolvimento inicial das histórias 1, 2 e 3 em `src/`, com os testes da Sprint 2 passando.
+
+---
+
+## Sprint 4
+
+### Mudança na entrada do sistema
+
+O sistema passou a receber **um único arquivo CSV com o histórico completo** de treinos, em vez de receber treino por treino. Com isso a HU 3 não precisa mais do cache de treinos nem de ir montando o banco de semanas a cada entrada: o histórico é lido de uma vez, as semanas são montadas (incluindo as semanas sem treino) e cada semana é analisada em sequência. O novo fluxo está no fluxograma da aplicação: `docs/Diagramas/Fluxograma_Eng_Software.drawio` (e `.png`).
+
+### Refatoração e padrões de projeto
+
+| História | Arquivo                      | Padrão   | Diagrama                              |
+|----------|------------------------------|----------|---------------------------------------|
+| 2        | `src/historia2.py`           | Strategy | `docs/Diagramas/Diagrama_UML_HU2.png` |
+| 3        | `src/analisador_lesoes.py`   | Observer | `docs/Diagramas/Diagrama_UML_HU3.png` |
+
+**HU 2 - Strategy:** a comparação dos recordes pessoais saiu da classe `RecordPessoal` e foi para as estratégias `MaiorRecorde` e `MenorRecorde` (interface `EstrategiaRecorde`). A classe continua responsável por guardar e atualizar os recordes, e a regra de comparação fica separada. A versão anterior está em `backup/historia2.py`.
+
+**HU 3 - Observer:** as funções soltas de `src/historia3.py` viraram os métodos da classe `AnalisadorLesoes` (`src/analisador_lesoes.py`), com a mesma lógica de cálculo. Na versão da Sprint 3 cada função imprimia o alerta direto no terminal, o que prendia o cálculo à saída. Agora a classe só calcula e chama `notificar(semana, mensagem)`, que avisa os observadores cadastrados:
+
+- `AlertaTerminal`: imprime o alerta no terminal (mesmo comportamento da Sprint 3);
+- `ColetorAlertas`: guarda os alertas em uma lista, usada nos testes e na geração do relatório final.
+
+Para uma nova saída (por exemplo, escrever os alertas no relatório .txt) basta criar outro observador que implemente `ObservadorAlerta.atualizar`, sem mexer na classe de análise.
+
+**O que mudou na HU 3 além da estrutura:**
+
+- A entrada é o CSV inteiro (`AnalisadorLesoes.de_csv`), lido com a função `processar_linha_csv` da HU 1; o agrupamento por semana usa `agruparSemana` e `indentificarDomingo` da HU 2.
+- Cada semana gera um perfil com `volume_agudo`, `pace_agudo`, `volume_cronico`, `pace_cronico`, `acwr` e `classificacao`.
+- "Sem base de comparação" passou a ser a classificação da semana e não é mais impresso como alerta (critério 3.5).
+- O alerta de recuperação sai uma vez para cada sequência de dias seguidos (critério 3.4), e não mais a cada novo treino.
+- Correção: semana sem treino ficava com pace 0.0 e gerava um alerta de ritmo de 100%. Agora o pace dessa semana fica `None` e não gera alerta.
+
+Os testes da versão refatorada (`testes/testes_analisador_lesoes.py`) usam os mesmos cenários e as mesmas mensagens dos testes da Sprint 3, mas montando um CSV com o histórico completo.
 
 ---
 

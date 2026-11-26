@@ -24,6 +24,7 @@
 \usepackage{etoolbox}
 \patchcmd{\thebibliography}{\section*{\refname}}{\subsection*{\refname}}{}{}
 \usepackage{float}
+\usepackage{graphicx}
 
 \onehalfspacing
 \setlength{\parindent}{1.25cm}
@@ -146,6 +147,10 @@ de risco de lesões.
   \end{tabularx}
 \end{table}
 
+O usuário envia um único arquivo CSV com todo o histórico, uma linha por treino. O
+sistema não recebe treinos separados: o histórico é lido de uma vez e todas as análises
+(semanas, recordes e alertas) são feitas a partir dele.
+
 % ---------------------------------------------------------------
 \section{Pesquisa e justificativa}
 % ---------------------------------------------------------------
@@ -258,7 +263,8 @@ alerta de recuperação avisa quando o corredor treina vários dias seguidos sem
         \end{itemize}
   \item O sistema deve calcular o pace de cada treino (tempo / distância), o pace médio
         da semana (média dos paces dos treinos da semana) e o pace crônico (média dos
-        paces dos treinos das últimas 4 semanas, incluindo a atual). Se o pace da
+        paces dos treinos das últimas 4 semanas, incluindo a atual). Semana sem treino
+        não tem pace médio e não gera alerta de ritmo. Se o pace da
         semana for 15\% ou mais rápido que o crônico, pela fórmula
         \[
           \text{diferença} = \frac{\text{pace crônico} - \text{pace da semana}}
@@ -302,12 +308,14 @@ alerta de recuperação avisa quando o corredor treina vários dias seguidos sem
 \section{Relação entre testes e critérios de aceitação}
 % ---------------------------------------------------------------
 
-Os testes automatizados estão na pasta \texttt{testes/}, com um arquivo para cada
-história de usuário, e usam o módulo \texttt{unittest} do Python. O arquivo de testes da
-história 3 contém apenas os testes e importa as funções do script da história
-(\texttt{src/historia3.py}), que será desenvolvido na Sprint 3. Por isso, nesta fase,
-esses testes ainda falham e servem como especificação do que o script deve fazer. O nome de cada teste
-começa pelo número do critério que ele verifica. Para rodar todos os testes a partir da
+Os testes automatizados estão na pasta \texttt{testes/} e usam o módulo
+\texttt{unittest} do Python. Cada arquivo importa o script da sua história em
+\texttt{src/}. A história 3 tem dois arquivos de testes: \texttt{testes\_historia3.py}
+testa a versão da Sprint 3 (funções em \texttt{src/historia3.py}) e
+\texttt{testes\_analisador\_lesoes.py} testa a versão refatorada da Sprint 4 (classe
+\texttt{AnalisadorLesoes} em \texttt{src/analisador\_lesoes.py}), com os mesmos
+cenários, mas montando um CSV com o histórico completo. O nome de cada teste começa pelo
+número do critério que ele verifica. Para rodar todos os testes a partir da
 raiz do repositório:
 
 \begin{verbatim}
@@ -324,14 +332,22 @@ python -m unittest discover -s testes -v
     \textbf{Arquivo} & \textbf{\normalfont Teste} & \textbf{Critério(s)} \\
     \midrule
     \texttt{testes\_historia1.py} & test\_1\_1\_leitura\_dados\_validos             & 1.1 \\
-                                  & test\_1\_2\_e\_1\_4\_calculo\_e\_formatacao\_pace   & 1.2 e 1.4 \\
+                                  & test\_1\_2\_calculo\_pace                        & 1.2 \\
                                   & test\_1\_3\_ignorar\_linhas\_invalidas          & 1.3 \\
+                                  & test\_1\_4\_formatacao\_pace                     & 1.4 \\
     \midrule
-    \texttt{testes\_historia2.py} & test\_2\_1\_e\_2\_4\_agrupamento\_e\_identificacao & 2.1 e 2.4 \\
+    \texttt{testes\_historia2.py} & test\_2\_1\_agrupamento\_semanal                 & 2.1 \\
                                   & test\_2\_2\_calculo\_volumeSemanal              & 2.2 \\
                                   & test\_2\_3\_recordePessoal                      & 2.3 \\
+                                  & test\_2\_4\_identificacao\_agrupamentos\_semanais & 2.4 \\
     \midrule
     \texttt{testes\_historia3.py} & test\_3\_1\_volume\_semanal\_e\_acwr             & 3.1 \\
+                                  & test\_3\_2\_classificacao\_e\_alertas\_de\_volume                & 3.2 \\
+                                  & test\_3\_3\_mudanca\_brusca\_de\_pace                & 3.3 \\
+                                  & test\_3\_4\_dias\_seguidos\_sem\_descanso     & 3.4 \\
+                                  & test\_3\_5\_semanas\_sem\_historico\_suficiente               & 3.5 \\
+    \midrule
+    \shortstack[l]{\texttt{testes\_analisador\_}\\\texttt{lesoes.py}} & test\_3\_1\_volume\_semanal\_e\_acwr             & 3.1 \\
                                   & test\_3\_2\_classificacao\_e\_alertas\_de\_volume                & 3.2 \\
                                   & test\_3\_3\_mudanca\_brusca\_de\_pace                & 3.3 \\
                                   & test\_3\_4\_dias\_seguidos\_sem\_descanso     & 3.4 \\
@@ -344,16 +360,82 @@ python -m unittest discover -s testes -v
 \section{Arquitetura do sistema}
 % ---------------------------------------------------------------
 
-\textit{Seção a ser desenvolvida na Sprint 3: diagrama da arquitetura, com os
-componentes, suas responsabilidades e a comunicação entre eles.}
+A Figura~\ref{fig:arquitetura} mostra os componentes do sistema e a comunicação entre
+eles. Os dados seguem um único caminho, do arquivo CSV até o relatório final:
+
+\begin{itemize}[itemsep=0.3em]
+  \item \textbf{historia1.py:} lê o arquivo CSV, extrai os dados de cada treino e
+        calcula o pace. Entrega a lista de treinos para a história 2.
+  \item \textbf{historia2.py:} agrupa os treinos por semana, calcula o volume semanal e
+        identifica os recordes pessoais. Entrega os volumes semanais para a história 3.
+  \item \textbf{historia3.py / analisador\_lesoes.py:} calcula o ACWR e o pace crônico
+        de cada semana e gera os alertas de risco de lesão (volume, ritmo e recuperação).
+  \item \textbf{main.py:} interface com o usuário. Recebe o caminho do CSV, executa o
+        fluxo e apresenta o relatório final em \texttt{.txt} com as métricas e os alertas.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{../Diagramas/DiagramaArquiteturaDeSoftware.pdf}
+  \caption{Diagrama da arquitetura do sistema.}
+  \label{fig:arquitetura}
+\end{figure}
+
 
 % ---------------------------------------------------------------
 \section{Padrões de projeto}
 % ---------------------------------------------------------------
 
-\textit{Seção a ser desenvolvida na Sprint 4: padrões de projeto aplicados, com a
-justificativa de cada um e um diagrama por padrão com as classes e módulos reais do
-código.}
+\subsection{Strategy -- recordes pessoais (história 2)}
+
+Na primeira versão, a classe \texttt{RecordPessoal} guardava os recordes e também
+decidia, com os métodos \texttt{isgreater} e \texttt{islower}, se um valor novo devia
+substituir o recorde atual. Com o Strategy, a regra de comparação saiu da classe e foi
+para a interface \texttt{EstrategiaRecorde}, com as estratégias \texttt{MaiorRecorde}
+(maior distância, maior volume semanal e maior número de treinos) e \texttt{MenorRecorde}
+(menor pace). A classe \texttt{RecordPessoal} ficou só com o armazenamento e a
+atualização dos recordes, e o comportamento do sistema continuou o mesmo
+(Figura~\ref{fig:uml_hu2}). A versão anterior está em \texttt{backup/historia2.py}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{../Diagramas/Diagrama_UML_HU2.png}
+  \caption{Padrão Strategy na história 2 (\texttt{src/historia2.py}).}
+  \label{fig:uml_hu2}
+\end{figure}
+
+\subsection{Observer -- alertas de lesão (história 3)}
+
+Na Sprint 3 a história 3 era um conjunto de funções soltas que alteravam um dicionário de
+perfil e imprimiam os alertas direto no terminal com \texttt{print()}. Na refatoração as
+funções viraram métodos da classe \texttt{AnalisadorLesoes}
+(\texttt{src/analisador\_lesoes.py}), mantendo a mesma lógica de cálculo, e foi aplicado
+o padrão Observer para separar o cálculo dos alertas da forma como eles são exibidos.
+
+A classe \texttt{AnalisadorLesoes} é o sujeito: guarda uma lista de observadores e,
+quando encontra um alerta, chama \texttt{notificar(semana, mensagem)}, que repassa o
+alerta para todos eles. Os observadores implementam a interface
+\texttt{ObservadorAlerta}:
+
+\begin{itemize}[itemsep=0.3em]
+  \item \texttt{AlertaTerminal}: imprime o alerta no terminal, como na Sprint 3;
+  \item \texttt{ColetorAlertas}: guarda os alertas em uma lista, usada pelos testes e
+        pela geração do relatório final.
+\end{itemize}
+
+Escolhemos o Observer porque a saída final do sistema é um relatório em \texttt{.txt}, e
+na versão anterior levar os alertas para o relatório exigiria mudar todas as funções que
+usavam \texttt{print()}. Agora uma nova saída é só mais um observador, sem alterar a
+classe de análise. Os testes também ficaram mais simples, porque conferem a lista do
+\texttt{ColetorAlertas} em vez de capturar o que foi impresso no terminal
+(Figura~\ref{fig:uml_hu3}). A versão anterior continua em \texttt{src/historia3.py}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{../Diagramas/Diagrama_UML_HU3.png}
+  \caption{Padrão Observer na história 3 (\texttt{src/analisador\_lesoes.py}).}
+  \label{fig:uml_hu3}
+\end{figure}
 
 % ---------------------------------------------------------------
 % Referências (Sprint 1 e história de usuário 3)
