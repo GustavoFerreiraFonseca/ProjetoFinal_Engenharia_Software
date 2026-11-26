@@ -3,7 +3,6 @@ import tempfile
 import unittest
 from sistema_corrida import *
 
-
 class TestHistorialPace(unittest.TestCase):
 
     #Testa a leitura dos dados válidos do CSV
@@ -38,7 +37,6 @@ class TestHistorialPace(unittest.TestCase):
 
         pace_obtido_2 = calcular_pace_formatado(5.0, 25.0)
         self.assertEqual(pace_obtido_2, "5:00 min/km")
-
 
 class TestHistorialVolume(unittest.TestCase):
     # testa o funcionamento do agrupamento das semanas, quantas semanas foram registradas e se os dias dentro das semanas estão de acordo
@@ -104,7 +102,6 @@ class TestHistorialVolume(unittest.TestCase):
 
         self.assertEqual(len(resultado["Semana 01/11/2026:"]), 2)
         self.assertEqual(len(resultado["Semana 08/11/2026:"]), 1)
-
 
 # =- Testes para a história de usuário (3) e seus critérios de aceitação -=
 class TestAnalisadorLesoes(unittest.TestCase):
@@ -301,7 +298,5 @@ class TestAnalisadorLesoes(unittest.TestCase):
 
         # CSV sem nenhum treino válido não tem semanas para analisar
         self.assertEqual(self.criar_analisador(["data,distancia_km,tempo_min,fc_media"]).analisar(), [])
-
-
 if __name__ == '__main__':
     unittest.main()
