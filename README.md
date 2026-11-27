@@ -3,21 +3,27 @@ Repositório Público destinado para o projeto final da disciplina de engenharia
 
 ## Estrutura do repositório
 
+A entrega do trabalho é um `.zip` com **um arquivo de código** (`sistema_corrida.py`) e **um arquivo de testes** (`testes_sistema.py`). Por isso o código das três histórias está reunido nesses dois arquivos, na raiz do repositório. As pastas `src/` e `testes/` mantêm o mesmo código separado por história, e a pasta `backup/` guarda as versões de antes da refatoração, para comparar o que foi alterado.
+
 ```
 ProjetoFinal_Engenharia_Software/
 ├── README.md
-├── src/
-│   ├── historia1.py               # leitura do CSV e cálculo do pace (HU 1)
+├── sistema_corrida.py             # código completo do sistema (HUs 1, 2 e 3 + relatório) - entregue no .zip
+├── testes_sistema.py              # todos os testes automatizados - entregue no .zip
+├── treinos.csv                    # exemplo de histórico com 16 treinos
+├── src/                           # mesmo código refatorado, separado por história
+│   ├── historia1.py               # leitura do CSV e cálculo do pace com Template Method (HU 1)
 │   ├── historia2.py               # semanas, volume semanal e recordes com Strategy (HU 2)
-│   ├── historia3.py               # alertas de lesão, versão da Sprint 3 em funções (HU 3)
-│   └── analisador_lesoes.py       # alertas de lesão refatorados na classe AnalisadorLesoes com Observer (HU 3)
-├── testes/
-│   ├── testes_historia1.py        # testes da história de usuário 1
-│   ├── testes_historia2.py        # testes da história de usuário 2
-│   ├── testes_historia3.py        # testes da história de usuário 3 (versão da Sprint 3)
-│   └── testes_analisador_lesoes.py # testes da história de usuário 3 (versão refatorada)
-├── backup/
-│   └── historia2.py               # versão da HU 2 antes da refatoração
+│   └── analisador_lesoes.py       # alertas de lesão na classe AnalisadorLesoes com Observer (HU 3)
+├── testes/                        # testes separados por história
+│   ├── testes_historia1.py
+│   ├── testes_historia2.py
+│   ├── testes_historia3.py        # testes da versão da Sprint 3 da HU 3
+│   └── testes_analisador_lesoes.py
+├── backup/                        # código antes da refatoração da Sprint 4
+│   ├── historia1.py
+│   ├── historia2.py
+│   └── historia3.py
 └── docs/
     ├── TrabalhoFinal.pdf          # documentação do trabalho (gerada a partir do LaTeX)
     ├── Diagramas/
@@ -32,17 +38,33 @@ ProjetoFinal_Engenharia_Software/
         └── Enunciado_Trabalho_Final_ES_26-2.pdf
 ```
 
-### Como rodar os testes
+## Como executar
 
-Todos os testes de uma vez (a partir da raiz do repositório):
+A partir da raiz do repositório, passando o caminho do CSV:
 
 ```
-python -m unittest discover -s testes -v
+python sistema_corrida.py treinos.csv
 ```
 
-A história 3 tem duas versões, cada uma com o seu arquivo de testes: `testes_historia3.py` testa as funções da Sprint 3 (`src/historia3.py`) e `testes_analisador_lesoes.py` testa a classe refatorada da Sprint 4 (`src/analisador_lesoes.py`).
+Sem o argumento, o programa pergunta o caminho do arquivo. O relatório é mostrado no terminal e gravado em `relatorio_final.txt`, com o resumo semanal, os recordes pessoais, a análise de carga (ACWR) de cada semana e os alertas preventivos.
 
-Os testes de uma história só (a partir da raiz do repositório):
+O CSV deve ter um cabeçalho e uma linha por treino, com as colunas `data` (DD/MM/AAAA), `distancia_km`, `tempo_minutos` e `frequencia_cardiaca`.
+
+## Como rodar os testes
+
+Todos os testes, a partir da raiz do repositório:
+
+```
+python -m unittest testes_sistema -v
+```
+
+O arquivo tem uma classe de testes por história: `TestHistorialPace` (HU 1), `TestHistorialVolume` (HU 2) e `TestAnalisadorLesoes` (HU 3). Para rodar só uma história:
+
+```
+python -m unittest testes_sistema.TestHistorialPace -v
+```
+
+Os testes separados por história, na pasta `testes/`, também podem ser rodados um a um, por exemplo:
 
 ```
 python -m unittest testes.testes_historia1 -v
@@ -112,26 +134,23 @@ As referências acima sustentam a importância da atividade física e, mais espe
 
 ### Relação entre testes e critérios
 
-| Arquivo                         | Teste                                        | Critério(s) |
-|---------------------------------|----------------------------------------------|-------------|
-| `testes/testes_historia1.py`    | `test_1_1_leitura_dados_validos`             | 1.1         |
-| `testes/testes_historia1.py`    | `test_1_2_calculo_pace`                      | 1.2         |
-| `testes/testes_historia1.py`    | `test_1_3_ignorar_linhas_invalidas`          | 1.3         |
-| `testes/testes_historia1.py`    | `test_1_4_formatacao_pace`                   | 1.4         |
-| `testes/testes_historia2.py`    | `test_2_1_agrupamento_semanal`               | 2.1         |
-| `testes/testes_historia2.py`    | `test_2_2_calculo_volumeSemanal`             | 2.2         |
-| `testes/testes_historia2.py`    | `test_2_3_recordePessoal`                    | 2.3         |
-| `testes/testes_historia2.py`    | `test_2_4_identificacao_agrupamentos_semanais` | 2.4       |
-| `testes/testes_historia3.py`    | `test_3_1_volume_semanal_e_acwr`             | 3.1         |
-| `testes/testes_historia3.py`    | `test_3_2_classificacao_e_alertas_de_volume` | 3.2         |
-| `testes/testes_historia3.py`    | `test_3_3_mudanca_brusca_de_pace`            | 3.3         |
-| `testes/testes_historia3.py`    | `test_3_4_dias_seguidos_sem_descanso`        | 3.4         |
-| `testes/testes_historia3.py`    | `test_3_5_semanas_sem_historico_suficiente`  | 3.5         |
-| `testes/testes_analisador_lesoes.py` | `test_3_1_volume_semanal_e_acwr`        | 3.1         |
-| `testes/testes_analisador_lesoes.py` | `test_3_2_classificacao_e_alertas_de_volume` | 3.2    |
-| `testes/testes_analisador_lesoes.py` | `test_3_3_mudanca_brusca_de_pace`       | 3.3         |
-| `testes/testes_analisador_lesoes.py` | `test_3_4_dias_seguidos_sem_descanso`   | 3.4         |
-| `testes/testes_analisador_lesoes.py` | `test_3_5_semanas_sem_historico_suficiente` | 3.5     |
+Todos os testes estão em `testes_sistema.py`. O nome de cada teste começa pelo número do critério que ele verifica.
+
+| Classe de teste         | Teste                                          | Critério |
+|-------------------------|------------------------------------------------|----------|
+| `TestHistorialPace`     | `test_1_1_leitura_dados_validos`               | 1.1      |
+| `TestHistorialPace`     | `test_1_2_calculo_pace`                        | 1.2      |
+| `TestHistorialPace`     | `test_1_3_ignorar_linhas_invalidas`            | 1.3      |
+| `TestHistorialPace`     | `test_1_4_formatacao_pace`                     | 1.4      |
+| `TestHistorialVolume`   | `test_2_1_agrupamento_semanal`                 | 2.1      |
+| `TestHistorialVolume`   | `test_2_2_calculo_volumeSemanal`               | 2.2      |
+| `TestHistorialVolume`   | `test_2_3_recordePessoal`                      | 2.3      |
+| `TestHistorialVolume`   | `test_2_4_identificacao_agrupamentos_semanais` | 2.4      |
+| `TestAnalisadorLesoes`  | `test_3_1_volume_semanal_e_acwr`               | 3.1      |
+| `TestAnalisadorLesoes`  | `test_3_2_classificacao_e_alertas_de_volume`   | 3.2      |
+| `TestAnalisadorLesoes`  | `test_3_3_mudanca_brusca_de_pace`              | 3.3      |
+| `TestAnalisadorLesoes`  | `test_3_4_dias_seguidos_sem_descanso`          | 3.4      |
+| `TestAnalisadorLesoes`  | `test_3_5_semanas_sem_historico_suficiente`    | 3.5      |
 
 ---
 
@@ -139,7 +158,7 @@ As referências acima sustentam a importância da atividade física e, mais espe
 
 - Diagrama da arquitetura: `docs/Diagramas/DiagramaArquiteturaDeSoftware.pdf`.
 - Diagrama de fluxo da HU 3 (versão treino por treino), substituído na Sprint 4 pelo fluxograma da aplicação.
-- Desenvolvimento inicial das histórias 1, 2 e 3 em `src/`, com os testes da Sprint 2 passando.
+- Desenvolvimento inicial das histórias 1, 2 e 3, com os testes da Sprint 2 passando. Essas versões estão em `backup/`.
 
 ---
 
@@ -151,29 +170,39 @@ O sistema passou a receber **um único arquivo CSV com o histórico completo** d
 
 ### Refatoração e padrões de projeto
 
-| História | Arquivo                      | Padrão   | Diagrama                              |
-|----------|------------------------------|----------|---------------------------------------|
-| 2        | `src/historia2.py`           | Strategy | `docs/Diagramas/Diagrama_UML_HU2.png` |
-| 3        | `src/analisador_lesoes.py`   | Observer | `docs/Diagramas/Diagrama_UML_HU3.png` |
+| História | Padrão          | Classe principal           | Arquivo separado           | Diagrama                              |
+|----------|-----------------|----------------------------|----------------------------|---------------------------------------|
+| 1        | Template Method | `ProcessadorArquivoTreino` | `src/historia1.py`         | `docs/Diagramas/diagramaUMLPP1.png`   |
+| 2        | Strategy        | `EstrategiaRecorde`        | `src/historia2.py`         | `docs/Diagramas/Diagrama_UML_HU2.png` |
+| 3        | Observer        | `AnalisadorLesoes`         | `src/analisador_lesoes.py` | `docs/Diagramas/Diagrama_UML_HU3.png` |
+
+As três classes também estão em `sistema_corrida.py`. As versões de antes da refatoração estão em `backup/`.
+
+**HU 1 - Template Method:** a classe abstrata `ProcessadorArquivoTreino` define o fluxo de leitura no método `processar` (ler as linhas → extrair e validar cada linha → montar o registro com o pace). A subclasse `ProcessadorCSV` implementa só o que depende do formato: `ler_linhas` abre o arquivo e descarta o cabeçalho, e `extrair_e_validar` usa `processar_linha_csv` para descartar linhas inválidas. Para aceitar outro formato basta criar outra subclasse. O histórico inteiro é lido com `ProcessadorCSV().processar("treinos.csv")`. A versão anterior está em `backup/historia1.py`.
 
 **HU 2 - Strategy:** a comparação dos recordes pessoais saiu da classe `RecordPessoal` e foi para as estratégias `MaiorRecorde` e `MenorRecorde` (interface `EstrategiaRecorde`). A classe continua responsável por guardar e atualizar os recordes, e a regra de comparação fica separada. A versão anterior está em `backup/historia2.py`.
 
-**HU 3 - Observer:** as funções soltas de `src/historia3.py` viraram os métodos da classe `AnalisadorLesoes` (`src/analisador_lesoes.py`), com a mesma lógica de cálculo. Na versão da Sprint 3 cada função imprimia o alerta direto no terminal, o que prendia o cálculo à saída. Agora a classe só calcula e chama `notificar(semana, mensagem)`, que avisa os observadores cadastrados:
+**HU 3 - Observer:** as funções soltas de `backup/historia3.py` (versão da Sprint 3) viraram os métodos da classe `AnalisadorLesoes` (`src/analisador_lesoes.py`), com a mesma lógica de cálculo. Na versão da Sprint 3 cada função imprimia o alerta direto no terminal, o que prendia o cálculo à saída. Agora a classe só calcula e chama `notificar(semana, mensagem)`, que avisa os observadores cadastrados:
 
 - `AlertaTerminal`: imprime o alerta no terminal (mesmo comportamento da Sprint 3);
 - `ColetorAlertas`: guarda os alertas em uma lista, usada nos testes e na geração do relatório final.
 
-Para uma nova saída (por exemplo, escrever os alertas no relatório .txt) basta criar outro observador que implemente `ObservadorAlerta.atualizar`, sem mexer na classe de análise.
+Para uma nova saída basta criar outro observador que implemente `ObservadorAlerta.atualizar`, sem mexer na classe de análise.
 
 **O que mudou na HU 3 além da estrutura:**
 
-- A entrada é o CSV inteiro (`AnalisadorLesoes.de_csv`), lido com a função `processar_linha_csv` da HU 1; o agrupamento por semana usa `agruparSemana` e `indentificarDomingo` da HU 2.
+- A entrada é o CSV inteiro (`AnalisadorLesoes.de_csv`), lido com a `ProcessadorCSV` da HU 1; o agrupamento por semana usa `agruparSemana` e `indentificarDomingo` da HU 2.
 - Cada semana gera um perfil com `volume_agudo`, `pace_agudo`, `volume_cronico`, `pace_cronico`, `acwr` e `classificacao`.
 - "Sem base de comparação" passou a ser a classificação da semana e não é mais impresso como alerta (critério 3.5).
 - O alerta de recuperação sai uma vez para cada sequência de dias seguidos (critério 3.4), e não mais a cada novo treino.
 - Correção: semana sem treino ficava com pace 0.0 e gerava um alerta de ritmo de 100%. Agora o pace dessa semana fica `None` e não gera alerta.
 
-Os testes da versão refatorada (`testes/testes_analisador_lesoes.py`) usam os mesmos cenários e as mesmas mensagens dos testes da Sprint 3, mas montando um CSV com o histórico completo.
+Os testes da versão refatorada (classe `TestAnalisadorLesoes` em `testes_sistema.py`, e `testes/testes_analisador_lesoes.py`) usam os mesmos cenários e as mesmas mensagens dos testes da Sprint 3, mas montando um CSV com o histórico completo.
+
+
+### Junção para a entrega
+
+Como a entrega é um `.zip` com um arquivo de código e um de testes, o código das três histórias foi reunido em `sistema_corrida.py`, junto com a função `gerar_relatorio`, que monta o relatório final em `.txt`, e os testes foram reunidos em `testes_sistema.py`. Na junção, a leitura do CSV passou também a descartar linhas com data fora do formato DD/MM/AAAA e a aceitar arquivos salvos com BOM (`utf-8-sig`, como os exportados pelo Excel).
 
 ---
 

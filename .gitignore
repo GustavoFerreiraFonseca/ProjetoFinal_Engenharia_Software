@@ -17,3 +17,7 @@ venv/
 
 # Editores
 .vscode/
+
+
+# Backup particular
+.backup2/
