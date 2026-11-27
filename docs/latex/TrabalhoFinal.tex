@@ -139,17 +139,19 @@ de risco de lesões.
     \toprule
     \textbf{Coluna} & \textbf{Descrição} \\
     \midrule
-    \texttt{data}          & Data do treino, no formato DD/MM/AAAA \\
-    \texttt{distancia\_km} & Distância percorrida, em quilômetros \\
-    \texttt{tempo\_min}    & Tempo total do treino, em minutos \\
-    \texttt{fc\_media}     & Frequência cardíaca média do treino, em bpm \\
+    \texttt{data}                 & Data do treino, no formato DD/MM/AAAA \\
+    \texttt{distancia\_km}        & Distância percorrida, em quilômetros \\
+    \texttt{tempo\_minutos}       & Tempo total do treino, em minutos \\
+    \texttt{frequencia\_cardiaca} & Frequência cardíaca média do treino, em bpm \\
     \bottomrule
   \end{tabularx}
 \end{table}
 
 O usuário envia um único arquivo CSV com todo o histórico, uma linha por treino. O
 sistema não recebe treinos separados: o histórico é lido de uma vez e todas as análises
-(semanas, recordes e alertas) são feitas a partir dele.
+(semanas, recordes e alertas) são feitas a partir dele. A primeira linha do arquivo é o
+cabeçalho e é ignorada na leitura. Um exemplo com 16 treinos está em
+\texttt{treinos.csv}, na raiz do repositório.
 
 % ---------------------------------------------------------------
 \section{Pesquisa e justificativa}
@@ -386,15 +388,93 @@ eles. Os dados seguem um único caminho, do arquivo CSV até o relatório final:
 \section{Padrões de projeto}
 % ---------------------------------------------------------------
 
+Na Sprint 4 cada membro do trio refatorou a sua história aplicando um padrão de projeto
+(Tabela~\ref{tab:padroes}). Em todos os casos o comportamento do sistema foi mantido e
+os testes da Sprint 2 continuaram passando.
+
+\begin{table}[H]
+  \centering
+  \caption{Padrões de projeto aplicados em cada história.}
+  \label{tab:padroes}
+  \begin{tabular}{clll}
+    \toprule
+    \textbf{História} & \textbf{Padrão} & \textbf{Arquivo} & \textbf{Diagrama} \\
+    \midrule
+    1 & Template Method & \texttt{src/historia1.py}         & Figura~\ref{fig:uml_hu1} \\
+    2 & Strategy        & \texttt{src/historia2.py}         & Figura~\ref{fig:uml_hu2} \\
+    3 & Observer        & \texttt{src/analisador\_lesoes.py} & Figura~\ref{fig:uml_hu3} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Template Method -- leitura do histórico (história 1)}
+
+Na Sprint 3 a história 1 tinha apenas as funções \texttt{processar\_linha\_csv}, que
+extrai e valida uma linha do arquivo, e \texttt{calcular\_pace\_formatado}, que calcula o
+pace. Abrir o arquivo, pular o cabeçalho, percorrer as linhas e montar cada treino ficava
+a cargo de quem usava essas funções. Com o Template Method, esse fluxo passou a ser
+definido em um único lugar, a classe abstrata \texttt{ProcessadorArquivoTreino}.
+
+O método \texttt{processar(caminho\_arquivo)} é o método-modelo: ele fixa a ordem dos
+passos e devolve a lista de treinos válidos, cada um como um dicionário com
+\texttt{data}, \texttt{distancia}, \texttt{tempo}, \texttt{frequencia\_cardiaca} e
+\texttt{pace}:
+
+\begin{enumerate}[itemsep=0.3em]
+  \item \texttt{ler\_linhas}: lê as linhas do arquivo (abstrato);
+  \item \texttt{extrair\_e\_validar}: transforma cada linha em uma tupla com os dados do
+        treino ou devolve \texttt{None} se a linha for inválida (abstrato);
+  \item \texttt{montar\_registro}: calcula o pace e monta o dicionário do treino
+        (implementado na própria classe abstrata, igual para qualquer formato).
+\end{enumerate}
+
+A subclasse \texttt{ProcessadorCSV} implementa só os dois passos que dependem do formato:
+\texttt{ler\_linhas} abre o arquivo e descarta o cabeçalho, e \texttt{extrair\_e\_validar}
+reaproveita a função \texttt{processar\_linha\_csv}, que continua descartando as linhas com
+distância ou tempo menores ou iguais a zero (critério 1.3) e também as que têm frequência
+cardíaca inválida. Com isso,
+a leitura do histórico completo virou uma chamada só:
+
+\begin{verbatim}
+treinos = ProcessadorCSV().processar("treinos.csv")
+\end{verbatim}
+
+Escolhemos o Template Method porque a sequência ler $\rightarrow$ validar $\rightarrow$
+montar o registro é a mesma para qualquer fonte de dados, e o que muda é apenas como o
+arquivo é lido e como cada linha é interpretada. Para aceitar outro formato no futuro
+(por exemplo, um arquivo exportado por um relógio esportivo), basta criar uma nova
+subclasse com esses dois métodos, sem alterar o fluxo nem o cálculo do pace
+(Figura~\ref{fig:uml_hu1}). As funções da Sprint 3 continuam em
+\texttt{src/historia1.py} e são usadas pela história 3 e pelos testes.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\linewidth]{../Diagramas/diagramaUMLPP1.png}
+  \caption{Padrão Template Method na história 1 (\texttt{src/historia1.py}).}
+  \label{fig:uml_hu1}
+\end{figure}
+
 \subsection{Strategy -- recordes pessoais (história 2)}
 
 Na primeira versão, a classe \texttt{RecordPessoal} guardava os recordes e também
 decidia, com os métodos \texttt{isgreater} e \texttt{islower}, se um valor novo devia
 substituir o recorde atual. Com o Strategy, a regra de comparação saiu da classe e foi
-para a interface \texttt{EstrategiaRecorde}, com as estratégias \texttt{MaiorRecorde}
-(maior distância, maior volume semanal e maior número de treinos) e \texttt{MenorRecorde}
-(menor pace). A classe \texttt{RecordPessoal} ficou só com o armazenamento e a
-atualização dos recordes, e o comportamento do sistema continuou o mesmo
+para a interface abstrata \texttt{EstrategiaRecorde}, que define o método
+\texttt{deve\_atualizar(novo\_recorde, atual\_recorde)}. Ela tem duas implementações:
+\texttt{MaiorRecorde}, usada para a maior distância, o maior volume semanal e o maior
+número de treinos, e \texttt{MenorRecorde}, usada para o menor pace. As duas também
+aceitam o primeiro valor quando o recorde ainda está zerado.
+
+A classe \texttt{RecordPessoal} guarda uma instância de cada estratégia e ficou só com o
+armazenamento e a atualização dos recordes: cada \texttt{set} pergunta à estratégia
+correspondente se o valor novo deve substituir o atual. Os métodos \texttt{isgreater} e
+\texttt{islower} foram mantidos para não quebrar quem já os usava, mas agora apenas
+repassam a comparação para as estratégias.
+
+Escolhemos o Strategy para tirar da classe de recordes a regra de comparação e reduzir a
+concentração de responsabilidades em um só lugar. Um novo tipo de recorde que use outra
+regra passa a ser uma nova estratégia, sem mudar a lógica de atualização. O comportamento
+do sistema continuou o mesmo e os testes da história 2 seguem passando
 (Figura~\ref{fig:uml_hu2}). A versão anterior está em \texttt{backup/historia2.py}.
 
 \begin{figure}[H]
